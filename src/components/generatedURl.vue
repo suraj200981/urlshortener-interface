@@ -27,7 +27,7 @@
                   <v-text-field
                     disabled
                     solo
-                    v-model="generatedURl"
+                    v-model="this.generatedURl"
                   ></v-text-field>
                 </v-col>
                 <v-col>
@@ -40,13 +40,14 @@
                     text
                     tile
                     type="submit"
+                    @click="copyUrl()"
                     >Copy url
                   </v-btn>
                 </v-col>
               </v-row>
 
               <p style="text-align: left; padding-left: 20px">
-                Long URL: <a href="url">{{ orignalURL }}</a>
+                Long URL: <a href="url">http://{{ orignalURL }}</a>
               </p>
               <p style="text-align: left; padding-left: 20px">
                 Track the
@@ -119,39 +120,38 @@ export default {
     isAuthenticated: false,
   }),
   methods: {
+    copyUrl() {
+      navigator.clipboard.writeText(this.generatedURl);
+    },
     requestGet() {
-      //substring generatedURl
-      var url = this.generatedURl;
-      //make get request
+      let data = { shortenedUrl: this.generatedURl.toString() };
+
       axios
-        .get("http://localhost:8081/data/" + url)
+        .post("http://localhost:8300/tracking", data)
         .then((response) => {
-          console.log(response.data, "data lmao");
-          let data = {
-            orignialURL: response.data.old_url,
-            shortURL: response.data.short_url,
-            createdBy: response.data.createdBy,
-            clicks: response.data.clicks,
-            ip: response.data.ip,
-          };
-          //clear local storage
-          localStorage.clear();
-          localStorage.setItem("generatedURl", data.shortURL);
           this.$router.push({
             name: "urlcounter",
+            params: {
+              urlId: response.data.id,
+              urlOriginalUrl: response.data.originalUrl,
+              urlPrefix: response.data.prefix,
+              urlClickCount: response.data.clickCount,
+              urlCreatedAt: response.data.createdAt,
+              urlShortenedUrl: response.data.shortenedUrl,
+            },
           });
         })
         .catch((error) => {
-          console.log(error);
+          console.error(error);
         });
     },
   },
   mounted() {
     console.log("in param", this.$route.params);
-    let data = this.$route.params.generatedURl;
+    let data = this.$route.params;
     console.log("data is", data);
-    this.orignalURL = data.orignialURL;
-    this.generatedURl = data.shortURL;
+    this.orignalURL = data.originalUrl;
+    this.generatedURl = data.generatedURl;
   },
 };
 </script>
