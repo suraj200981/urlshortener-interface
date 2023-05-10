@@ -89,34 +89,27 @@ export default {
     this.clicks = dataFromParams.urlClickCount;
     //substring generatedURl to only include the generted code
     //make get request every 10 seconds to end point to get all url information
-    console.log(window.location.pathname, " wow");
-    if (window.location.pathname == "/urlcounter") {
-      setInterval(() => {
+    console.log(window.location.href, " wow");
+    if (window.location.href == "http://localhost:8080/urlcounter") {
+      var startTimer = setInterval(() => {
         //only refresh if the brower url is http://localhost:8080/urlcounter
         let data = { shortenedUrl: this.generatedURl };
 
         axios
           .post("http://localhost:8300/tracking", data)
           .then((response) => {
-            this.$router.push({
-              name: "/urlcounter",
-              params: {
-                urlId: response.data.id,
-                urlOriginalUrl: response.data.originalUrl,
-                urlPrefix: response.data.prefix,
-                urlClickCount: response.data.clickCount,
-                urlCreatedAt: response.data.createdAt,
-                urlShortenedUrl: response.data.shortenedUrl,
-              },
-            });
+            this.generatedURl = response.data.shortenedUrl;
+            this.orignalURL = response.data.originalUrl;
+            this.clicks = response.data.clickCount;
           })
           .catch((error) => {
             console.error(error);
           });
-      }, 10000);
+      }, 3000);
+    } else {
+      clearInterval(startTimer);
     }
   },
-  created() {},
 };
 // let dataOnPage = {oldUrl : response.data.old_url, newUrl : response.data.short_url, createdBy: response.data.createdBy, clicks: response.data.clicks, ip: response.data.ip};
 // //clear shorted url from local storageon each request to ensure it is up to date
