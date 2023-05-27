@@ -64,8 +64,6 @@
   </v-container>
 </template>
 <script>
-import axios from "axios";
-
 export default {
   name: "urlCounter",
 
@@ -76,65 +74,50 @@ export default {
     createdAt: "",
     clicks: "0",
     items: [],
+    websocket: null,
   }),
   mounted() {
     //incoming data
     let dataFromParams = this.$route.params;
-    console.log(dataFromParams, "this is what i got");
     //setting data
     this.generatedURl = dataFromParams.urlShortenedUrl;
 
     this.orignalURL = dataFromParams.urlOriginalUrl;
 
     this.clicks = dataFromParams.urlClickCount;
-    //substring generatedURl to only include the generted code
-    //make get request every 10 seconds to end point to get all url information
-    console.log(window.location.href, " wow");
-    if (window.location.href == "http://localhost:8080/urlcounter") {
-      var startTimer = setInterval(() => {
-        //only refresh if the brower url is http://localhost:8080/urlcounter
-        let data = { shortenedUrl: this.generatedURl };
 
-        axios
-          .post("http://localhost:8300/tracking", data)
-          .then((response) => {
-            this.generatedURl = response.data.shortenedUrl;
-            this.orignalURL = response.data.originalUrl;
-            this.clicks = response.data.clickCount;
-          })
-          .catch((error) => {
-            console.error(error);
-          });
-      }, 3000);
-    } else {
-      clearInterval(startTimer);
+    // Create a new SockJS object
+
+    // Connect to the WebSocket server
+    this.websocket = new WebSocket("ws://localhost:8300/tracking-socket");
+
+    this.websocket.onopen = () => {
+      console.log("WebSocket connection opened");
+
+      this.websocket.addEventListener("message", (event) => {
+        const data = event.data;
+        console.log("Received message:", data);
+        this.clicks = data;
+      });
+    };
+
+    this.websocket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    this.websocket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+  },
+
+  beforeDestroy() {
+    // Clean up the WebSocket connection when the component is destroyed
+    if (this.websocket) {
+      this.websocket.disconnect();
     }
   },
+  methods: {},
 };
-// let dataOnPage = {oldUrl : response.data.old_url, newUrl : response.data.short_url, createdBy: response.data.createdBy, clicks: response.data.clicks, ip: response.data.ip};
-// //clear shorted url from local storageon each request to ensure it is up to date
-// localStorage.clear("generatedURl");
-
-// //set local storage
-// localStorage.setItem("generatedURl", "http://"+dataOnPage.newUrl);
-// //set data to variables
-// this.orignalURL = dataOnPage.oldUrl;
-// this.generatedURl = "http://"+dataOnPage.newUrl;
-// this.createdBy = dataOnPage.createdBy;
-// //
-// localStorage.setItem("items", JSON.stringify(dataOnPage.ip));
-// localStorage.setItem("clicks", dataOnPage.clicks);
-// localStorage.setItem("originalURL", dataOnPage.oldUrl);
-
-// //check if this.clicks is updated compared to local storage
-// if(this.clicks != localStorage.getItem("clicks")){
-//   this.clicks = localStorage.getItem("clicks");
-//    //loop through data.ip and push to items array
-//     for(var i = 0; i < data.ip.length; i++){
-//       this.items.push(data.ip[i]);
-//       this.items = JSON.parse(localStorage.getItem("items"));
-// }
-// }
 </script>
 <style scoped lang="scss">
 .v-btn:not(.v-btn--round).v-size--large {

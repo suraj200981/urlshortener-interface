@@ -111,8 +111,6 @@ export default {
       axios
         .post("http://localhost:8000/validation", data)
         .then((response) => {
-          console.log(response.data.substring(15));
-
           this.$router.push({
             name: "mini",
             params: {

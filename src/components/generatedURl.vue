@@ -147,9 +147,7 @@ export default {
     },
   },
   mounted() {
-    console.log("in param", this.$route.params);
     let data = this.$route.params;
-    console.log("data is", data);
     this.orignalURL = data.originalUrl;
     this.generatedURl = data.generatedURl;
   },
