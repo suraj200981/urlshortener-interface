@@ -15,7 +15,7 @@
           The aim of this project is to minify long URLS and make them shorter.
         </p>
         <br />
-        <v-card class="mx-auto" max-width="800" height="220">
+        <v-card class="mx-auto" max-width="800" height="280">
           <!-- <router-link to="/mini">mini</router-link> -->
           <v-form @submit="onSubmit" method="POST">
             <v-card-text>
@@ -52,6 +52,30 @@
                 Use my URL Shortener to create a shortened link making it easy
                 to remember
               </p>
+              <v-btn color="primary" class="mt-4" @click="showModal = true">
+                Track Previously Shortened URLs
+              </v-btn>
+              <!-- Modal Dialog for Tracking URL -->
+              <v-dialog v-model="showModal" max-width="500">
+                <v-card>
+                  <v-card-title class="headline"
+                    >Enter Shortened URL</v-card-title
+                  >
+                  <v-card-text>
+                    <v-form @submit.prevent="trackUrl">
+                      <v-text-field
+                        label="Shortened URL"
+                        v-model="trackUrlInput"
+                        required
+                      ></v-text-field>
+                      <v-btn type="submit" color="primary">Track URL</v-btn>
+                      <v-btn color="red" @click="showModal = false"
+                        >Cancel</v-btn
+                      >
+                    </v-form>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
               <v-row> </v-row>
             </v-card-text>
           </v-form>
@@ -103,6 +127,8 @@ export default {
       },
     ],
     url: "",
+    showModal: false,
+    trackUrlInput: "",
   }),
   methods: {
     onSubmit(e) {
@@ -123,6 +149,30 @@ export default {
           if (error.code == "ERR_BAD_REQUEST") {
             console.log("error found: ", error.message);
           }
+        });
+    },
+
+    // Method to handle URL tracking from the modal
+    trackUrl() {
+      axios
+        .post("http://localhost:8300/tracking", {
+          shortenedUrl: this.trackUrlInput,
+        })
+        .then((response) => {
+          this.$router.push({
+            name: "urlcounter",
+            params: {
+              urlId: response.data.id,
+              urlOriginalUrl: response.data.originalUrl,
+              urlPrefix: response.data.prefix,
+              urlClickCount: response.data.clickCount,
+              urlCreatedAt: response.data.createdAt,
+              urlShortenedUrl: response.data.shortenedUrl,
+            },
+          });
+        })
+        .catch((error) => {
+          console.error("Failed to track URL: ", error);
         });
     },
   },

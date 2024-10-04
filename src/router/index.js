@@ -13,9 +13,6 @@ const routes = [
   {
     path: "/mini",
     name: "mini",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () =>
       import(
         /* webpackChunkName: "GeneratedView" */ "../views/GeneratedView.vue"
@@ -24,29 +21,32 @@ const routes = [
   {
     path: "/urlcounter",
     name: "urlcounter",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/UrlCounterView.vue"),
+      import(
+        /* webpackChunkName: "UrlCounterView" */ "../views/UrlCounterView.vue"
+      ),
   },
   {
     path: "/login",
     name: "login",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/LoginView.vue"),
+      import(/* webpackChunkName: "LoginView" */ "../views/LoginView.vue"),
   },
   {
     path: "/redirect",
     name: "RedirectionView",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
     component: () =>
-      import(/* webpackChunkName: "about" */ "../views/RedirectionView.vue"),
+      import(
+        /* webpackChunkName: "RedirectionView" */ "../views/RedirectionView.vue"
+      ),
+  },
+  {
+    path: "/dashboard",
+    name: "UserDashboard",
+    component: () =>
+      import(
+        /* webpackChunkName: "UserDashboard" */ "../views/UserDashboard.vue"
+      ),
   },
 ];
 

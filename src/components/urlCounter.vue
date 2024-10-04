@@ -9,15 +9,26 @@
         </p>
         <v-card-text
           ><b>Shortened url:</b>
-          <a target="_blank" :href="generatedURl">{{
-            generatedURl
-          }}</a></v-card-text
+          <a target="_blank" :href="generatedURl">{{ generatedURl }}</a>
+          <v-btn
+            icon
+            @click="copyToClipboard(generatedURl)"
+            color="orange darken-4"
+          >
+            <v-icon>mdi-content-copy</v-icon>
+          </v-btn></v-card-text
         >
+
         <v-card-text
           ><b>Long url: </b
-          ><a target="_blank" :href="orignalURL">{{
-            orignalURL
-          }}</a></v-card-text
+          ><a target="_blank" :href="orignalURL">{{ orignalURL }}</a>
+          <v-btn
+            icon
+            @click="copyToClipboard(orignalURL)"
+            color="orange darken-4"
+          >
+            <v-icon>mdi-content-copy</v-icon>
+          </v-btn></v-card-text
         >
         <br />
         <v-card class="mx-auto" max-width="400">
@@ -36,20 +47,15 @@
           <v-virtual-scroll :items="items" :item-height="50" height="300">
             <template v-slot:default="{ item }">
               <v-list-item>
-                <v-list-item-avatar>
-                  <v-avatar :color="item.color" size="56" class="white--text">
-                    <!-- {{ item.initials }} -->
-                  </v-avatar>
-                </v-list-item-avatar>
-
                 <v-list-item-content>
-                  <v-list-item-title>{{ item }}</v-list-item-title>
+                  <v-list-item-title
+                    >{{ item.ip }} - {{ item.country }}</v-list-item-title
+                  >
                 </v-list-item-content>
 
                 <v-list-item-action>
                   <v-btn depressed small>
                     View location
-
                     <v-icon color="orange darken-4" right>
                       mdi-open-in-new
                     </v-icon>
@@ -63,6 +69,7 @@
     </v-row>
   </v-container>
 </template>
+
 <script>
 export default {
   name: "urlCounter",
@@ -81,14 +88,10 @@ export default {
     let dataFromParams = this.$route.params;
     //setting data
     this.generatedURl = dataFromParams.urlShortenedUrl;
-
     this.orignalURL = dataFromParams.urlOriginalUrl;
-
     this.clicks = dataFromParams.urlClickCount;
 
-    // Create a new SockJS object
-
-    // Connect to the WebSocket server
+    // Create a new WebSocket connection
     this.websocket = new WebSocket("ws://localhost:8300/tracking-socket");
 
     this.websocket.onopen = () => {
@@ -97,7 +100,10 @@ export default {
       this.websocket.addEventListener("message", (event) => {
         const data = event.data;
         console.log("Received message:", data);
+
+        // Increment the clicks counter and update the geographic metrics
         this.clicks = data;
+        this.addRandomGeoData();
       });
     };
 
@@ -116,9 +122,37 @@ export default {
       this.websocket.disconnect();
     }
   },
-  methods: {},
+  methods: {
+    copyToClipboard(text) {
+      navigator.clipboard.writeText(text).catch((error) => {
+        console.error("Copy failed!", error);
+      });
+    },
+    // Generates a random IP and country
+    generateRandomIP() {
+      return `${Math.floor(Math.random() * 255)}.${Math.floor(
+        Math.random() * 255
+      )}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    },
+    generateRandomCountry() {
+      const countries = ["US", "CA", "UK", "IN", "DE", "AU", "JP", "FR", "BR"];
+      return countries[Math.floor(Math.random() * countries.length)];
+    },
+    addRandomGeoData() {
+      const randomIP = this.generateRandomIP();
+      const randomCountry = this.generateRandomCountry();
+      const newItem = {
+        ip: randomIP,
+        country: randomCountry,
+        color: "blue",
+        initials: randomCountry.charAt(0).toUpperCase(),
+      };
+      this.items.push(newItem);
+    },
+  },
 };
 </script>
+
 <style scoped lang="scss">
 .v-btn:not(.v-btn--round).v-size--large {
   background-color: #1976d2;

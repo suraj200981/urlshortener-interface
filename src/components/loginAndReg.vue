@@ -29,19 +29,21 @@
         <v-tabs-items v-model="tab">
           <v-tab-item :key="1" value="login">
             <v-card flat>
-              <v-form @submit="login" method="POST">
+              <v-form @submit.prevent="login()" method="POST">
                 <v-card-text>
-                  <v-text-field
-                    outlined
-                    label="user name"
-                    prepend-icon="mdi-account-outline"
-                    v-model="username"
-                  ></v-text-field>
                   <v-text-field
                     outlined
                     label="email address"
                     prepend-icon="mdi-email"
                     v-model="email"
+                    @keydown.enter="login"
+                  ></v-text-field>
+                  <v-text-field
+                    outlined
+                    label="password"
+                    prepend-icon="mdi-form-textbox-password"
+                    v-model="password"
+                    @keydown.enter="login"
                   ></v-text-field>
                   <v-btn
                     class="ma-2"
@@ -58,7 +60,7 @@
           </v-tab-item>
           <v-tab-item :key="2" value="reg">
             <v-card flat>
-              <v-form @submit="signUp()" method="POST">
+              <v-form @submit.prevent="signUp()" method="POST">
                 <v-card-text>
                   <v-text-field
                     outlined
@@ -100,41 +102,67 @@
         </v-tabs-items>
       </v-card>
     </v-col>
+    <ErrorModal ref="errorModal" :errorMessage="errorMessage" />
   </v-row>
 </template>
 <script>
 import axios from "axios";
+import ErrorModal from "./ErrorModal.vue";
 
 export default {
   name: "loginReg",
-
+  components: { ErrorModal },
   data: () => ({
     tab: "login",
     loader: null,
     loading: false,
-    username: "",
     email: "",
     firstNameSignup: "",
     lastNameSignup: "",
     passwordSignup: "",
+    password: "",
     emailSignup: "",
+    errorMessage: "",
   }),
 
   methods: {
     login() {
-      const data = {
-        username: this.username,
-        email: this.email,
-      };
+      this.loading = true;
+      const data = { email: this.email, password: this.password };
       axios
-        .post("http://localhost:8081/api/login", data)
+        .post("http://localhost:9120/login", data)
         .then((res) => {
-          console.log("Logging result: ", res);
+          console.log("Login successful: ", res);
+
+          // Save the token in localStorage
+          localStorage.setItem("userToken", res.data.token);
+
+          // Save user information in localStorage
+          localStorage.setItem(
+            "userInfo",
+            JSON.stringify({
+              emailAddress: res.data.emailAddress,
+              firstName: res.data.firstName,
+              lastName: res.data.lastName,
+              accountType: res.data.accountType,
+              accountCreatedAt: res.data.accountCreatedAt,
+            })
+          );
+
+          this.loading = false;
+
+          // Redirect to dashboard
+          this.$router.push({ name: "UserDashboard" });
         })
         .catch((err) => {
-          console.log("What went wrong? : ", err);
+          this.errorMessage =
+            err.response?.data ||
+            "An error occurred with logging in, please try again later";
+          this.$refs.errorModal.openModal();
+          this.loading = false;
         });
     },
+
     signUp() {
       const data = {
         username: this.usernameSignup,
