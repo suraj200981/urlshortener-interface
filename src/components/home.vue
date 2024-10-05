@@ -85,19 +85,15 @@
       </v-col>
 
       <v-col class="mb-5" cols="12">
-        <h2 class="headline font-weight-bold mb-3">Technologies Used</h2>
+        <h2 class="headline font-weight-bold mb-3">Activity Feed</h2>
         <v-row justify="center">
-          <a
-            v-for="(eco, i) in ecosystem"
-            :key="i"
-            :href="eco.href"
-            class="subheading mx-3"
-            target="_blank"
-          >
-            {{ eco.text }}
-          </a>
+          <ul>
+            <li v-for="activity in activities" :key="activity.id">
+              {{ activity.firstName }} {{ activity.action }}
+              {{ timeSince(activity.createdAt) }} ago
+            </li>
+          </ul>
         </v-row>
-        <p style="padding-top: 20px">-----MEVN Stack-----</p>
       </v-col>
     </v-row>
   </v-container>
@@ -112,30 +108,29 @@ export default {
   components: { ErrorModal },
 
   data: () => ({
-    ecosystem: [
-      {
-        text: "MongoDB",
-        href: "https://github.com/vuetifyjs/MongoDB",
-      },
-      {
-        text: "Express",
-        href: "https://github.com/vuetifyjs/vuetify/Express",
-      },
-      {
-        text: "VueJS",
-        href: "https://github.com/vuetifyjs/awesome-vuetify/VueJS",
-      },
-      {
-        text: "NodeJS",
-        href: "https://github.com/vuetifyjs/awesome-vuetify/NodeJS",
-      },
-    ],
     url: "",
     showModal: false,
     trackUrlInput: "",
     errorMessage: "",
+    activities: [],
   }),
+  mounted() {
+    // Fetch recent activities when the component is mounted
+    axios.get("http://localhost:8100/activities").then((response) => {
+      console.log("found it bitch", response.data);
+      this.activities = response.data;
+    });
+  },
   methods: {
+    timeSince(date) {
+      const now = new Date();
+      const activityDate = new Date(date);
+      const diffInMinutes = Math.floor((now - activityDate) / 60000);
+
+      if (diffInMinutes < 60) return `${diffInMinutes} mins`;
+      const diffInHours = Math.floor(diffInMinutes / 60);
+      return `${diffInHours} hours`;
+    },
     onSubmit(e) {
       e.preventDefault();
       let data = { url: this.url };
@@ -198,7 +193,7 @@ export default {
             this.$router.push({ name: "login" });
           } else {
             this.errorMessage =
-              "You are a guest and you do not have access to track this URL or it doesn't exist.";
+              "You do not have access to track this URL or it doesn't exist.";
 
             this.$refs.errorModal.openModal();
           }

@@ -132,13 +132,6 @@ export default {
       // let data = { shortenedUrl: this.generatedURl.toString() };
       // console.log("shortened url", data);
 
-      // Check if the token is available before making the request
-      if (!token) {
-        alert("You need to be logged in to track URLs.");
-        this.$router.push({ name: "login" });
-        return;
-      }
-
       axios
         .post(
           "http://localhost:8300/tracking",

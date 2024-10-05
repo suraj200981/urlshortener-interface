@@ -65,13 +65,13 @@
                   <v-text-field
                     outlined
                     label="First Name"
-                    prepend-icon="mdi-email"
+                    prepend-icon="mdi-account-outline"
                     v-model="firstNameSignup"
                   ></v-text-field>
                   <v-text-field
                     outlined
                     label="Last Name"
-                    prepend-icon="mdi-email"
+                    prepend-icon="mdi-account-outline"
                     v-model="lastNameSignup"
                   ></v-text-field>
                   <v-text-field
@@ -83,7 +83,7 @@
                   <v-text-field
                     outlined
                     label="password"
-                    prepend-icon="mdi-account-outline"
+                    prepend-icon="mdi-lock"
                     v-model="passwordSignup"
                   ></v-text-field>
                   <v-btn
@@ -166,11 +166,26 @@ export default {
 
     signUp() {
       const data = {
-        username: this.usernameSignup,
-        email: this.emailSignup,
+        firstName: this.firstNameSignup,
+        lastName: this.lastNameSignup,
+        emailAddress: this.emailSignup,
+        password: this.passwordSignup,
+        accountType: "Premium user",
       };
 
-      console.log(data);
+      axios
+        .post("http://localhost:9120/register", data)
+        .then((res) => {
+          console.log("Sign up successful: ", res);
+          this.login();
+        })
+        .catch((err) => {
+          this.errorMessage =
+            err.response?.data ||
+            "An error occurred with signing up, please try again later";
+          this.$refs.errorModal.openModal();
+          this.loading = false;
+        });
     },
   },
   watch: {
