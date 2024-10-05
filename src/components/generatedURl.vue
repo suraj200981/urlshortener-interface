@@ -123,16 +123,36 @@ export default {
     copyUrl() {
       navigator.clipboard.writeText(this.generatedURl);
     },
+
     requestGet() {
-      let data = { shortenedUrl: this.generatedURl.toString() };
+      // Retrieve the JWT token from local storage
+      const token = localStorage.getItem("userToken");
+      console.log("Token retrieved from localStorage: ", token);
+
+      // let data = { shortenedUrl: this.generatedURl.toString() };
+      // console.log("shortened url", data);
+
+      // Check if the token is available before making the request
+      if (!token) {
+        alert("You need to be logged in to track URLs.");
+        this.$router.push({ name: "login" });
+        return;
+      }
 
       axios
-        .post("http://localhost:8300/tracking", data)
+        .post(
+          "http://localhost:8300/tracking",
+          {
+            shortenedUrl: this.generatedURl.toString(),
+          },
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}, // Only add header if token is present
+          }
+        )
         .then((response) => {
           this.$router.push({
             name: "urlcounter",
             params: {
-              urlId: response.data.id,
               urlOriginalUrl: response.data.originalUrl,
               urlPrefix: response.data.prefix,
               urlClickCount: response.data.clickCount,
@@ -142,7 +162,16 @@ export default {
           });
         })
         .catch((error) => {
-          console.error(error);
+          console.error("Failed to track URL: ", error);
+
+          if (error.response && error.response.status === 401) {
+            // Redirect to login page if unauthorized
+            this.$router.push({ name: "login" });
+          } else {
+            alert(
+              "You do not have access to track this URL or it doesn't exist."
+            );
+          }
         });
     },
   },

@@ -55,6 +55,8 @@
               <v-btn color="primary" class="mt-4" @click="showModal = true">
                 Track Previously Shortened URLs
               </v-btn>
+              <ErrorModal ref="errorModal" :errorMessage="errorMessage" />
+
               <!-- Modal Dialog for Tracking URL -->
               <v-dialog v-model="showModal" max-width="500">
                 <v-card>
@@ -103,9 +105,11 @@
 
 <script>
 import axios from "axios";
+import ErrorModal from "./ErrorModal.vue";
 
 export default {
   name: "homePage",
+  components: { ErrorModal },
 
   data: () => ({
     ecosystem: [
@@ -129,13 +133,21 @@ export default {
     url: "",
     showModal: false,
     trackUrlInput: "",
+    errorMessage: "",
   }),
   methods: {
     onSubmit(e) {
       e.preventDefault();
       let data = { url: this.url };
+
+      // Get the user's token from localStorage if logged in
+      const userToken = localStorage.getItem("userToken");
+
+      // Set up headers, include Authorization if a user is logged in
+      const headers = userToken ? { Authorization: `Bearer ${userToken}` } : {};
+
       axios
-        .post("http://localhost:8000/validation", data)
+        .post("http://localhost:8000/validation", data, { headers })
         .then((response) => {
           this.$router.push({
             name: "mini",
@@ -146,23 +158,30 @@ export default {
           });
         })
         .catch((error) => {
-          if (error.code == "ERR_BAD_REQUEST") {
+          if (error.code === "ERR_BAD_REQUEST") {
             console.log("error found: ", error.message);
           }
         });
     },
 
-    // Method to handle URL tracking from the modal
     trackUrl() {
+      // Retrieve the JWT token from local storage
+      const token = localStorage.getItem("userToken");
+
       axios
-        .post("http://localhost:8300/tracking", {
-          shortenedUrl: this.trackUrlInput,
-        })
+        .post(
+          "http://localhost:8300/tracking",
+          {
+            shortenedUrl: this.trackUrlInput,
+          },
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {}, // Only add header if token is present
+          }
+        )
         .then((response) => {
           this.$router.push({
             name: "urlcounter",
             params: {
-              urlId: response.data.id,
               urlOriginalUrl: response.data.originalUrl,
               urlPrefix: response.data.prefix,
               urlClickCount: response.data.clickCount,
@@ -171,8 +190,18 @@ export default {
             },
           });
         })
-        .catch((error) => {
-          console.error("Failed to track URL: ", error);
+        .catch((err) => {
+          if (err.response && err.response.status === 401) {
+            this.errorMessage = err.response?.data;
+            this.$refs.errorModal.openModal();
+            // Redirect to login page if unauthorized
+            this.$router.push({ name: "login" });
+          } else {
+            this.errorMessage =
+              "You are a guest and you do not have access to track this URL or it doesn't exist.";
+
+            this.$refs.errorModal.openModal();
+          }
         });
     },
   },

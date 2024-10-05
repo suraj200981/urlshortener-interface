@@ -141,6 +141,7 @@ export default {
           localStorage.setItem(
             "userInfo",
             JSON.stringify({
+              userId: res.data.userId,
               emailAddress: res.data.emailAddress,
               firstName: res.data.firstName,
               lastName: res.data.lastName,
