@@ -73,9 +73,7 @@
 
         <!-- New Account Profit Share Per Clicks Card -->
         <v-card class="account-profit-card transparent-card" elevation="4">
-          <v-card-title class="headline"
-            >Account Profit Share Per Clicks</v-card-title
-          >
+          <v-card-title class="headline">Profit Share Per Clicks</v-card-title>
           <v-divider></v-divider>
           <v-card-text>
             <p><b>Total Clicks:</b> {{ getTotalClicks() }}</p>
